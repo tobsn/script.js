@@ -32,8 +32,10 @@
   function $script(paths, idOrDone, optDone) {
     paths = paths[push] ? paths : [paths]
     var idOrDoneIsDone = idOrDone && idOrDone.call
-      , done = idOrDoneIsDone ? idOrDone : optDone
-      , id = idOrDoneIsDone ? paths.join('') : idOrDone
+      , idOrVarOrDoneIsDone = idOrVarOrDone && idOrVarOrDone.call
+      , done = idOrVarOrDoneIsDone ? idOrVarOrDone : ( idOrDoneIsDone ? idOrDone : optDone )
+      , id = idOrVarOrDoneIsDone ? ( idOrDoneIsDone ? paths.join('') : idOrDone ) : idOrDone
+      , var = !idOrVarOrDoneIsDone && idOrVarOrDone.search(/^[_$]{1}/)!==-1
       , queue = paths.length
     function loopFn(item) {
       return item.call ? item() : list[item]
@@ -48,6 +50,9 @@
       }
     }
     setTimeout(function () {
+      if(var && window[idOrVarOrDone]){
+        return;
+      }
       each(paths, function(path) {
         if (scripts[path]) {
           id && (ids[id] = 1)
