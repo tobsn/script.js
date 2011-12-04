@@ -35,7 +35,7 @@
       , idOrVarOrDoneIsDone = idOrVarOrDone && idOrVarOrDone.call
       , done = idOrVarOrDoneIsDone ? idOrVarOrDone : ( idOrDoneIsDone ? idOrDone : optDone )
       , id = idOrVarOrDoneIsDone ? ( idOrDoneIsDone ? paths.join('') : idOrDone ) : idOrDone
-      , var = !idOrVarOrDoneIsDone && idOrVarOrDone.search(/^[_$]{1}/)!==-1
+      , variable = !idOrVarOrDoneIsDone && idOrVarOrDone.search(/^[_$]{1}/)!==-1
       , queue = paths.length
     function loopFn(item) {
       return item.call ? item() : list[item]
@@ -43,14 +43,16 @@
     function callback() {
       if (!--queue) {
         list[id] = 1
-        done && done()
+        if(variable && window[idOrVarOrDone] || !variable ) {
+          done && done()
+        }
         for (var dset in delay) {
           every(dset.split('|'), loopFn) && !each(delay[dset], loopFn) && (delay[dset] = [])
         }
       }
     }
     setTimeout(function () {
-      if(var && window[idOrVarOrDone]){
+      if(variable && window[idOrVarOrDone]){
         return;
       }
       each(paths, function(path) {
