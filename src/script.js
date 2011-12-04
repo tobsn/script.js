@@ -29,32 +29,29 @@
     doc[readyState] = 'loading'
   }
 
-  function $script(paths, idOrDone, optDone) {
+  function $script(paths, idOrVarOrDone, idOrDone, optDone) {
     paths = paths[push] ? paths : [paths]
-    var idOrDoneIsDone = idOrDone && idOrDone.call
-      , idOrVarOrDoneIsDone = idOrVarOrDone && idOrVarOrDone.call
-      , done = idOrVarOrDoneIsDone ? idOrVarOrDone : ( idOrDoneIsDone ? idOrDone : optDone )
-      , id = idOrVarOrDoneIsDone ? ( idOrDoneIsDone ? paths.join('') : idOrDone ) : idOrDone
+     var idOrVarOrDoneIsDone = idOrVarOrDone && idOrVarOrDone.call
+      , idOrDoneIsDone = idOrDone && idOrDone.call
       , variable = !idOrVarOrDoneIsDone && idOrVarOrDone.search(/^[_$]{1}/)!==-1
+      , id = !variable && !idOrVarOrDoneIsDone ? idOrVarOrDone : paths.join('')
+      , done = idOrVarOrDoneIsDone ? idOrVarOrDone : ( idOrDoneIsDone ? idOrDone : optDone )
       , queue = paths.length
+
     function loopFn(item) {
       return item.call ? item() : list[item]
     }
     function callback() {
       if (!--queue) {
         list[id] = 1
-        if(variable && window[idOrVarOrDone] || !variable ) {
-          done && done()
-        }
+        if(!variable || variable && window[idOrVarOrDone]) done && done();
         for (var dset in delay) {
           every(dset.split('|'), loopFn) && !each(delay[dset], loopFn) && (delay[dset] = [])
         }
       }
     }
     setTimeout(function () {
-      if(variable && window[idOrVarOrDone]){
-        return;
-      }
+      if(variable && window[idOrVarOrDone]) return done && done();
       each(paths, function(path) {
         if (scripts[path]) {
           id && (ids[id] = 1)
@@ -62,13 +59,13 @@
         }
         scripts[path] = 1
         id && (ids[id] = 1)
-        create(!validBase.test(path) && scriptpath ? scriptpath + path + '.js' : path, callback)
+        create(!validBase.test(path) && scriptpath ? scriptpath + path + '.js' : path, callback, variable, idOrVarOrDone)
       })
     }, 0)
     return $script
   }
 
-  function create(path, fn) {
+  function create(path, fn, variable, name) {
     var el = doc.createElement('script')
       , loaded = f
     el.onload = el.onerror = el[onreadystatechange] = function () {
@@ -76,7 +73,7 @@
       el.onload = el[onreadystatechange] = null
       loaded = 1
       scripts[path] = 2
-      fn()
+      if(!variable || variable && window[name]) fn();
     }
     el.async = 1
     el.src = path
